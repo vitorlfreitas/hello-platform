@@ -1,0 +1,56 @@
+{{/* Only render this template if autoscaling is enabled in values.yaml */}}
+{{- if .Values.autoscaling.enabled }}
+# Kubernetes API version for autoscaling (v2 supports multiple metric types)
+apiVersion: autoscaling/v2
+# Resource type: automatically scales Pod count based on defined metrics
+kind: HorizontalPodAutoscaler
+metadata:
+  # HPA name from the chart's fullname helper
+  name: {{ include "hello-platform.fullname" . }}
+  # Standard Helm labels
+  labels:
+    {{- include "hello-platform.labels" . | nindent 4 }}
+# HPA specification
+spec:
+  # Reference to the resource (Deployment) that this HPA scales
+  scaleTargetRef:
+    # API group and version of the target resource
+    apiVersion: apps/v1
+    # Target resource type
+    kind: Deployment
+    # Target Deployment name
+    name: {{ include "hello-platform.fullname" . }}
+  # Minimum number of replicas the HPA will scale down to
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  # Maximum number of replicas the HPA will scale up to
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  # List of metrics the HPA monitors to decide scaling actions
+  metrics:
+    {{/* Conditionally add a CPU utilization metric if defined in values */}}
+    {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    # Metric source type: Resource (built-in cluster metrics like CPU/memory)
+    - type: Resource
+      resource:
+        # Monitor CPU usage
+        name: cpu
+        target:
+          # Utilization type: expressed as a percentage of resource requests
+          type: Utilization
+          # Scale up when average CPU utilization exceeds this threshold
+          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{/* Conditionally add a memory utilization metric if defined in values */}}
+    {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    # Metric source type: Resource (built-in cluster metrics)
+    - type: Resource
+      resource:
+        # Monitor memory usage
+        name: memory
+        target:
+          # Utilization type: percentage of resource requests
+          type: Utilization
+          # Scale up when average memory utilization exceeds this threshold
+          averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{/* End the conditional block — no HPA is created if autoscaling is disabled */}}
+{{- end }}

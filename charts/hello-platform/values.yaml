@@ -1,0 +1,119 @@
+# Number of Pod replicas to run for the Deployment
+replicaCount: 2
+
+# Container image configuration
+image:
+  # Docker image repository (registry/image name)
+  repository: hello-platform
+  # When to pull the image: IfNotPresent skips pull if image exists locally
+  pullPolicy: IfNotPresent
+  # Image tag identifying the version to use
+  tag: latest
+
+# Kubernetes ServiceAccount settings
+serviceAccount:
+  # Set to true to create a dedicated ServiceAccount for this app
+  create: false
+  # Whether to automatically mount the ServiceAccount token into Pods
+  automount: true
+  # Additional annotations for the ServiceAccount (empty by default)
+  annotations: {}
+  # Name of an existing ServiceAccount to use (blank means auto-generated)
+  name: ""
+
+# Kubernetes Service configuration (exposes Pods within or outside the cluster)
+service:
+  # ClusterIP makes the service accessible only inside the cluster
+  type: ClusterIP
+  # Port clients connect to on the Service
+  port: 80
+  # Port on the container (Pod) that receives the forwarded traffic
+  targetPort: 3000
+
+# Ingress configuration for routing external HTTP traffic into the cluster
+ingress:
+  # Toggle: set to true to create an Ingress resource
+  enabled: true
+  # Ingress controller class (nginx is the most common)
+  className: "nginx"
+  # Additional annotations for the Ingress (e.g., rate limiting, auth)
+  annotations: {}
+  # List of host-path rules that the Ingress routes
+  hosts:
+    # Hostname that external clients use to reach the app
+    - host: hello-platform.local
+      # Path rules under this hostname
+      paths:
+        # Match requests starting with "/"
+        - path: /
+          # Prefix matching: /anything also matches
+          pathType: Prefix
+
+# CPU and memory resource requests/limits for each container
+resources:
+  # Minimum resources the scheduler guarantees for the container
+  requests:
+    # Request 100 millicores of CPU (0.1 of a core)
+    cpu: 100m
+    # Request 128 MiB of RAM
+    memory: 128Mi
+  # Maximum resources the container may consume before being throttled/killed
+  limits:
+    # Cap CPU at 200 millicores
+    cpu: 200m
+    # Cap memory at 256 MiB
+    memory: 256Mi
+
+# Application-level configuration values injected via ConfigMap
+config:
+  # Node.js runtime environment (production enables optimizations)
+  nodeEnv: production
+  # Port the application listens on inside the container
+  port: "3000"
+  # Logging verbosity level
+  logLevel: info
+
+# Health probe configuration for Kubernetes liveness and readiness checks
+probes:
+  # Liveness probe: Kubernetes restarts the Pod if this fails
+  liveness:
+    # HTTP endpoint to check
+    path: /health
+    # Delay before the first probe after container start
+    initialDelaySeconds: 10
+    # How often (in seconds) to run the probe
+    periodSeconds: 10
+  # Readiness probe: Kubernetes removes the Pod from the load balancer if this fails
+  readiness:
+    # HTTP endpoint to check
+    path: /health
+    # Delay before the first probe (shorter than liveness to catch ready state sooner)
+    initialDelaySeconds: 5
+    # How often to run the probe
+    periodSeconds: 5
+
+# Horizontal Pod Autoscaler settings for automatic scaling
+autoscaling:
+  # Toggle: set to true to enable autoscaling
+  enabled: false
+  # Minimum number of replicas when scaling down
+  minReplicas: 1
+  # Maximum number of replicas when scaling up
+  maxReplicas: 10
+  # Scale up when average CPU usage across Pods exceeds this percentage
+  targetCPUUtilizationPercentage: 80
+  # (Commented out) Scale up when average memory usage exceeds this percentage
+  # targetMemoryUtilizationPercentage: 80
+
+# Gateway API HTTPRoute configuration (alternative to Ingress)
+httpRoute:
+  # Toggle: set to true to create an HTTPRoute instead of/alongside an Ingress
+  enabled: false
+  # Additional annotations for the HTTPRoute
+  annotations: {}
+  # Parent Gateway resources this route attaches to
+  parentRefs: []
+  # Hostnames this route matches (e.g., ["app.example.com"])
+  hostnames: []
+  # Routing rules (matches, filters, and backend references)
+  rules: []

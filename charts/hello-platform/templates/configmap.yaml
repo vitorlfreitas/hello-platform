@@ -1,0 +1,18 @@
+# Kubernetes API version for ConfigMap resources
+apiVersion: v1
+# Resource type: stores configuration data as key-value pairs
+kind: ConfigMap
+metadata:
+  # ConfigMap name: fullname + "-config" suffix (referenced by the Deployment)
+  name: {{ include "hello-platform.fullname" . }}-config
+  # Standard Helm-generated labels
+  labels:
+    {{- include "hello-platform.labels" . | nindent 4 }}
+# Key-value pairs injected as environment variables into the application containers
+data:
+  # Node.js runtime mode (quoted to ensure YAML treats it as a string)
+  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
+  # Application listening port
+  PORT: {{ .Values.config.port | quote }}
+  # Logging verbosity level
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}

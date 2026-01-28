@@ -1,0 +1,21 @@
+# Kubernetes API version for core resources
+apiVersion: v1
+# Resource type: ConfigMap stores non-secret configuration data as key-value pairs
+kind: ConfigMap
+metadata:
+  # Name of this ConfigMap — referenced by the Deployment for environment variables
+  name: hello-platform-config
+  # Deploy this ConfigMap into the hello-platform namespace
+  namespace: hello-platform
+  # Labels for selecting or filtering this resource
+  labels:
+    # Associates this ConfigMap with the hello-platform application
+    app: hello-platform
+# Key-value pairs that will be injected as environment variables into Pods
+data:
+  # Sets the Node.js environment to production for optimized runtime behavior
+  NODE_ENV: "production"
+  # Configures the application to listen on port 3000
+  PORT: "3000"
+  # Sets the logging verbosity to info level
+  LOG_LEVEL: "info"

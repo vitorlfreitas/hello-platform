@@ -1,0 +1,59 @@
+{{/* Only render this template if httpRoute is enabled in values.yaml */}}
+{{- if .Values.httpRoute.enabled -}}
+{{/* Pre-compute the full chart name into a variable for reuse */}}
+{{- $fullName := include "hello-platform.fullname" . -}}
+{{/* Pre-compute the service port into a variable for reuse */}}
+{{- $svcPort := .Values.service.port -}}
+# Gateway API version for HTTPRoute (newer alternative to Ingress)
+apiVersion: gateway.networking.k8s.io/v1
+# Resource type: defines HTTP routing rules for a Gateway API Gateway
+kind: HTTPRoute
+metadata:
+  # HTTPRoute name (reuses the pre-computed fullName variable)
+  name: {{ $fullName }}
+  # Standard Helm labels
+  labels:
+    {{- include "hello-platform.labels" . | nindent 4 }}
+  {{/* Conditionally add annotations from values */}}
+  {{- with .Values.httpRoute.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+# HTTPRoute specification
+spec:
+  # Parent references: identifies which Gateway(s) this route attaches to
+  parentRefs:
+    {{/* Render parentRefs array from values (e.g., gateway name and namespace) */}}
+    {{- with .Values.httpRoute.parentRefs }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{/* Hostnames this route responds to (only rendered if defined in values) */}}
+  {{- with .Values.httpRoute.hostnames }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  # Routing rules that define how to handle matched requests
+  rules:
+    {{/* Iterate over each rule defined in values.httpRoute.rules */}}
+    {{- range .Values.httpRoute.rules }}
+    {{/* Match conditions for incoming requests (e.g., path, headers) */}}
+    {{- with .matches }}
+    - matches:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{/* Optional filters to transform the request (e.g., header manipulation) */}}
+      {{- with .filters }}
+      filters:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+      # Backend references: where to route the matched traffic
+      backendRefs:
+        # Route to the Service with the chart's fullname
+        - name: {{ $fullName }}
+          # Port on the Service
+          port: {{ $svcPort }}
+          # Traffic weight (1 = 100% of traffic goes to this backend)
+          weight: 1
+    {{- end }}
+{{/* End the conditional block — file is empty if httpRoute is disabled */}}
+{{- end }}

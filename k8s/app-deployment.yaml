@@ -1,0 +1,116 @@
+# Kubernetes API version for workload resources (apps group, version 1)
+apiVersion: apps/v1
+# Resource type: Deployment manages a set of stateless Pods with rolling updates
+kind: Deployment
+metadata:
+  # Name of this Deployment resource
+  name: hello-platform
+  # Namespace where this Deployment is created
+  namespace: hello-platform
+  # Labels attached to the Deployment object itself
+  labels:
+    # Associates this Deployment with the application
+    app: hello-platform
+    # Tracks the version of the application for reference
+    version: v1.0.0
+# Spec defines the desired state of the Deployment
+spec:
+  # Run 2 Pod instances for redundancy and basic load distribution
+  replicas: 2
+  # Selector determines which Pods this Deployment manages
+  selector:
+    # Only Pods with this label are controlled by this Deployment
+    matchLabels:
+      app: hello-platform
+  # Pod template: defines the spec for each Pod created by this Deployment
+  template:
+    metadata:
+      # Labels applied to every Pod created from this template
+      labels:
+        # Must match the selector above for the Deployment to manage these Pods
+        app: hello-platform
+        # Version label on each Pod for tracking
+        version: v1.0.0
+    spec:
+      # List of containers running in each Pod
+      containers:
+      # Name of the container within the Pod
+      - name: hello-platform
+        # Docker image to run (uses the locally built image)
+        image: hello-platform:latest
+        # Only pull the image if it is not already present locally
+        imagePullPolicy: IfNotPresent
+        # Ports the container exposes
+        ports:
+        # Friendly name for this port
+        - name: http
+          # The port inside the container the app listens on
+          containerPort: 3000
+          # Network protocol used (TCP is default but stated explicitly)
+          protocol: TCP
+        # Environment variables injected into the container
+        env:
+        # NODE_ENV variable sourced from the ConfigMap
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              # Reference the hello-platform-config ConfigMap
+              name: hello-platform-config
+              # Pull the value stored under the NODE_ENV key
+              key: NODE_ENV
+        # PORT variable sourced from the ConfigMap
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              # Reference the hello-platform-config ConfigMap
+              name: hello-platform-config
+              # Pull the value stored under the PORT key
+              key: PORT
+        # Resource requests and limits for scheduling and throttling
+        resources:
+          # Minimum resources the container needs to be scheduled
+          requests:
+            # Request at least 128 MiB of memory
+            memory: "128Mi"
+            # Request at least 100 millicores (0.1 CPU core)
+            cpu: "100m"
+          # Maximum resources the container is allowed to consume
+          limits:
+            # Cap memory usage at 256 MiB (OOM-killed if exceeded)
+            memory: "256Mi"
+            # Cap CPU usage at 200 millicores (throttled if exceeded)
+            cpu: "200m"
+        # Liveness probe: determines if the container is still running; restarts it if not
+        livenessProbe:
+          # Perform an HTTP GET request to check health
+          httpGet:
+            # Endpoint that returns 200 when the app is alive
+            path: /health
+            # Port to send the health check request to
+            port: 3000
+          # Wait 10 seconds after container start before the first liveness check
+          initialDelaySeconds: 10
+          # Run a liveness check every 10 seconds
+          periodSeconds: 10
+          # Fail the check if no response within 3 seconds
+          timeoutSeconds: 3
+          # Mark the container as failed after 3 consecutive probe failures
+          failureThreshold: 3
+        # Readiness probe: determines if the container is ready to receive traffic
+        readinessProbe:
+          # Perform an HTTP GET request to check readiness
+          httpGet:
+            # Same health endpoint used for readiness
+            path: /health
+            # Port to send the readiness check to
+            port: 3000
+          # Wait 5 seconds after start before the first readiness check
+          initialDelaySeconds: 5
+          # Run a readiness check every 5 seconds
+          periodSeconds: 5
+          # Fail if no response within 3 seconds
+          timeoutSeconds: 3
+          # Remove from load balancer after 3 consecutive failures
+          failureThreshold: 3
+      # Always restart the container if it exits (unless the Pod is deleted)
+      restartPolicy: Always

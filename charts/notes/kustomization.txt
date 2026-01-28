@@ -1,0 +1,31 @@
+The Kustomization File
+
+An overview of the content of a kustomization file.
+The kustomization file is a YAML specification of a Kubernetes Resource Model (KRM) object called a Kustomization. A kustomization describes how to generate or transform other KRM objects.
+
+Although most practical kustomization files don’t actually look this way, a kustomization.yaml file is basically four lists:
+
+A typical layoult:
+app1/
+  kustomization.yaml
+    | resources:
+    | - ../base
+    | patches:
+    | - patch1.yaml
+  patch1.yaml
+
+app2/
+  kustomization.yaml
+    | resources:
+    | - ../base
+    | patches:
+    | - patch2.yaml
+  patch2.yaml
+
+base/
+  kustomization.yaml
+    | resources:
+    | - deployment.yaml
+    | - configMap.yaml
+  deployment.yaml
+  configMap.yaml

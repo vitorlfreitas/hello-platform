@@ -1,0 +1,35 @@
+# Kustomize API version and kind — identifies this as a Kustomization resource
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Default namespace applied to all resources that don't specify one
+namespace: hello-platform
+
+# List of YAML files that Kustomize will read and combine into the final output
+resources:
+  # Namespace definition (listed first so other resources can reference it)
+  - namespace.yaml
+  # ConfigMap holding application environment variables
+  - configmap.yaml
+  # Deployment that runs the application Pods
+  - deployment.yaml
+  # Service that exposes the Pods within the cluster
+  - service.yaml
+  # Ingress that routes external HTTP traffic to the Service
+  - ingress.yaml
+
+# Labels automatically added to every resource produced by this Kustomization
+commonLabels:
+  # Identifies all resources as belonging to this application
+  app: hello-platform
+  # Marks all resources as managed by Kustomize (useful for auditing)
+  managed-by: kustomize
+
+# Image transformations: allow overriding image names and tags without editing each file
+images:
+  # Original image name referenced in the Deployment spec
+  - name: hello-platform
+    # New image repository name (same here, but can be changed to a registry path)
+    newName: hello-platform
+    # Tag to use for the image (overrides any tag in the original manifests)
+    newTag: latest

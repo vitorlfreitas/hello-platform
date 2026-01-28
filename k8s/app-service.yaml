@@ -1,0 +1,31 @@
+# Kubernetes API version for core resources
+apiVersion: v1
+# Resource type: Service provides a stable network endpoint to access Pods
+kind: Service
+metadata:
+  # Name of this Service — used by Ingress and other resources to reference it
+  name: hello-platform
+  # Namespace this Service belongs to
+  namespace: hello-platform
+  # Labels for identification and selection
+  labels:
+    app: hello-platform
+# Spec defines the Service behavior and port mappings
+spec:
+  # ClusterIP: the Service is only accessible within the cluster (no external exposure)
+  type: ClusterIP
+  # Selector: route traffic to Pods that have this label
+  selector:
+    app: hello-platform
+  # Port configuration for this Service
+  ports:
+  # Friendly name for this port (used by Ingress and other references)
+  - name: http
+    # Port that external clients (within the cluster) connect to
+    port: 80
+    # Port on the Pod that actually receives the traffic (maps to containerPort)
+    targetPort: 3000
+    # Network protocol (TCP is default)
+    protocol: TCP
+  # Disable session affinity (each request is load-balanced independently)
+  sessionAffinity: None

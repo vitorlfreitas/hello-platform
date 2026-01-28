@@ -1,0 +1,12 @@
+Deployments
+
+A Deployment manages a set of Pods to run an application workload, usually one that doesn't maintain state.
+
+Create the Deployment by running the following command:
+
+    kubectl apply -f path-to-deployment.yaml
+
+Get all deployments to check if a deployment was created
+
+    kubectl get deployments
+

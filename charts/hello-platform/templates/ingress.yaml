@@ -1,0 +1,65 @@
+{{/* Only render this template if ingress is enabled in values.yaml */}}
+{{- if .Values.ingress.enabled -}}
+# Kubernetes API version for Ingress networking resources
+apiVersion: networking.k8s.io/v1
+# Resource type: routes external HTTP/HTTPS traffic into cluster Services
+kind: Ingress
+metadata:
+  # Ingress name from the chart's fullname helper
+  name: {{ include "hello-platform.fullname" . }}
+  # Standard Helm labels
+  labels:
+    {{- include "hello-platform.labels" . | nindent 4 }}
+  {{/* Conditionally add user-defined annotations from values (e.g., nginx settings) */}}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+# Ingress routing specification
+spec:
+  {{/* Conditionally set the ingress controller class name (e.g., "nginx") */}}
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{/* Conditionally add TLS termination if tls entries are defined in values */}}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{/* Iterate over each TLS entry */}}
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{/* List each hostname that this TLS certificate covers */}}
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      # Name of the Kubernetes Secret holding the TLS certificate and key
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  # HTTP routing rules
+  rules:
+    {{/* Iterate over each host defined in values.ingress.hosts */}}
+    {{- range .Values.ingress.hosts }}
+    {{/* Match incoming requests by hostname */}}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{/* Iterate over path rules for this host */}}
+          {{- range .paths }}
+          # URL path prefix to match
+          - path: {{ .path }}
+            {{/* Path matching type (Prefix, Exact, etc.) */}}
+            {{- with .pathType }}
+            pathType: {{ . }}
+            {{- end }}
+            # Backend Service that handles matched traffic
+            backend:
+              service:
+                # Service name (uses $ to access root context inside the loop)
+                name: {{ include "hello-platform.fullname" $ }}
+                port:
+                  # Port number on the Service
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+    {{- end }}
+{{/* End the conditional block — file is empty if ingress is disabled */}}
+{{- end }}

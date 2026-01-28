@@ -1,0 +1,28 @@
+# Kubernetes API version for Pod resources
+apiVersion: v1
+# Resource type: a single Pod used as a Helm test
+kind: Pod
+metadata:
+  # Test Pod name: fullname + "-test-connection" suffix
+  name: "{{ include "hello-platform.fullname" . }}-test-connection"
+  # Standard Helm labels
+  labels:
+    {{- include "hello-platform.labels" . | nindent 4 }}
+  # Annotations
+  annotations:
+    # Marks this Pod as a Helm test hook (runs on `helm test`)
+    "helm.sh/hook": test
+# Pod specification
+spec:
+  # List of containers in this test Pod
+  containers:
+    # Container name for the connectivity test
+    - name: wget
+      # Use the minimal busybox image (has wget built in)
+      image: busybox
+      # Run wget as the container's main command
+      command: ['wget']
+      # Target: the Service hostname and port (tests internal DNS resolution + connectivity)
+      args: ['{{ include "hello-platform.fullname" . }}:{{ .Values.service.port }}']
+  # Never restart this Pod — it runs once and reports pass/fail
+  restartPolicy: Never

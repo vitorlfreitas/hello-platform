@@ -1,0 +1,39 @@
+# Kubernetes API version for networking resources
+apiVersion: networking.k8s.io/v1
+# Resource type: Ingress routes external HTTP traffic into cluster Services
+kind: Ingress
+metadata:
+  # Name of this Ingress resource
+  name: hello-platform
+  # Namespace this Ingress belongs to
+  namespace: hello-platform
+  # Labels for querying or grouping this resource
+  labels:
+    app: hello-platform
+  # Annotations configure the behavior of the ingress controller
+  annotations:
+    # Rewrite the incoming URL path to "/" before forwarding to the backend service
+    nginx.ingress.kubernetes.io/rewrite-target: /
+# Spec defines the ingress routing rules
+spec:
+  # Use the "nginx" ingress controller class to handle this Ingress
+  ingressClassName: nginx
+  # List of routing rules that match incoming requests
+  rules:
+  # Only match requests with the hostname hello-platform.local
+  - host: hello-platform.local
+    http:
+      # List of path-based routing rules
+      paths:
+      # Match any request path that starts with "/"
+      - path: /
+        # Prefix means the path is matched as a prefix (e.g., /foo also matches)
+        pathType: Prefix
+        # Forward matched traffic to this backend Service
+        backend:
+          service:
+            # Name of the Kubernetes Service to route traffic to
+            name: hello-platform
+            port:
+              # Port on the Service to send traffic to (matches the Service's port field)
+              number: 80

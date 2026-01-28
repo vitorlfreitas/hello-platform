@@ -1,0 +1,27 @@
+# Kubernetes API version for core Service resources
+apiVersion: v1
+# Resource type: provides a stable network endpoint for Pod communication
+kind: Service
+metadata:
+  # Service name generated from the chart's fullname helper
+  name: {{ include "hello-platform.fullname" . }}
+  # Standard labels for the Service (app, chart, managed-by)
+  labels:
+    {{- include "hello-platform.labels" . | nindent 4 }}
+# Service specification
+spec:
+  # Service type from values (ClusterIP = internal only)
+  type: {{ .Values.service.type }}
+  # Port mappings for this Service
+  ports:
+    # External-facing port (what other services or Ingress connect to)
+    - port: {{ .Values.service.port }}
+      # Internal Pod port that receives the forwarded traffic
+      targetPort: {{ .Values.service.targetPort }}
+      # Network protocol (TCP)
+      protocol: TCP
+      # Descriptive name for this port mapping
+      name: http
+  # Label selector: routes traffic to Pods matching these labels
+  selector:
+    {{- include "hello-platform.selectorLabels" . | nindent 4 }}

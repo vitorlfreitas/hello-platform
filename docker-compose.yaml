@@ -1,0 +1,38 @@
+# Compose file format version (3.8 supports all modern features)
+version: '3.8'
+
+# Define the application services
+services:
+  # Service name used to reference this container within the compose network
+  hello-platform:
+    # Build configuration: build the image from source
+    build:
+      # Build context is the current directory (where Dockerfile lives)
+      context: .
+      # Dockerfile to use for building the image
+      dockerfile: Dockerfile
+    # Explicit name for the container (instead of auto-generated compose name)
+    container_name: hello-platform
+    # Map host port 3000 to container port 3000 (host:container)
+    ports:
+      - "3000:3000"
+    # Set environment variables passed into the container at runtime
+    environment:
+      # Run the Node.js app in production mode
+      - NODE_ENV=production
+      # Tell the app to listen on port 3000
+      - PORT=3000
+    # Restart the container automatically unless manually stopped
+    restart: unless-stopped
+    # Health check configuration to monitor container health
+    healthcheck:
+      # Run an HTTP GET to /health; exit 0 if status is 200, else exit 1
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      # Run the health check every 30 seconds
+      interval: 30s
+      # Fail the check if no response within 3 seconds
+      timeout: 3s
+      # Retry up to 3 times before marking as unhealthy
+      retries: 3
+      # Wait 5 seconds after container start before running the first check
+      start_period: 5s

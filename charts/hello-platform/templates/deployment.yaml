@@ -1,0 +1,71 @@
+# Kubernetes API version for Deployment resources
+apiVersion: apps/v1
+
+# Resource type: manages a set of Pods with declarative updates
+kind: Deployment
+
+# Metadata for the Deployment object
+metadata:
+  # Name generated from the chart's fullname helper template
+  name: {{ include "hello-platform.fullname" . }}
+  # Standard Helm labels (app, chart version, managed-by, etc.)
+  labels:
+    {{- include "hello-platform.labels" . | nindent 4 }}
+
+# Desired state specification for the Deployment
+spec:
+  # Number of Pod replicas, pulled from values.yaml replicaCount
+  replicas: {{ .Values.replicaCount }}
+  # Label selector that identifies which Pods belong to this Deployment
+  selector:
+    matchLabels:
+      # Uses the selector labels helper (app name + instance)
+      {{- include "hello-platform.selectorLabels" . | nindent 6 }}
+  # Pod template: defines the spec applied to every new Pod
+  template:
+    metadata:
+      # Labels on each Pod must match the selector above
+      labels:
+        {{- include "hello-platform.selectorLabels" . | nindent 8 }}
+    spec:
+      # Containers running inside each Pod
+      containers:
+        # Container name matches the chart name
+        - name: {{ .Chart.Name }}
+          # Image built from repository + tag defined in values.yaml
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          # Pull policy from values (e.g., IfNotPresent, Always)
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # Expose the container's internal port (targetPort from values)
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          # Inject all key-value pairs from the ConfigMap as environment variables
+          envFrom:
+            - configMapRef:
+                # References the ConfigMap created by the configmap.yaml template
+                name: {{ include "hello-platform.fullname" . }}-config
+          # Liveness probe: restarts the Pod if the app stops responding
+          livenessProbe:
+            httpGet:
+              # Health endpoint path from values
+              path: {{ .Values.probes.liveness.path }}
+              # Port to send the probe request to
+              port: {{ .Values.service.targetPort }}
+            # Seconds to wait before the first liveness check
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            # Interval between consecutive liveness checks
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+          # Readiness probe: removes the Pod from traffic if the app is not ready
+          readinessProbe:
+            httpGet:
+              # Health endpoint path from values
+              path: {{ .Values.probes.readiness.path }}
+              # Port to send the readiness check to
+              port: {{ .Values.service.targetPort }}
+            # Seconds to wait before the first readiness check
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            # Interval between consecutive readiness checks
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+          # CPU and memory resource requests and limits from values
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

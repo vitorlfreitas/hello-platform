@@ -1,0 +1,13 @@
+# MasOS
+.DS_Store
+
+# Node modules
+node_modules/ 
+
+# Compiled modules
+dist/            
+
+# Environment Secrets
+*.local.*
+.env 
+

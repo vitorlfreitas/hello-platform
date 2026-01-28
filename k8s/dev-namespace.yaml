@@ -1,0 +1,14 @@
+# Kubernetes API version for core resources
+apiVersion: v1
+# Resource type: a Namespace isolates a group of resources within the cluster
+kind: Namespace
+# Metadata section contains the name and labels for this namespace
+metadata:
+  # Name of the namespace — all resources scoped here (Deployments, Services, etc.)
+  name: hello-platform
+  # Labels for filtering and selecting this namespace
+  labels:
+    # Label matching the namespace name for easy identification
+    name: hello-platform
+    # Indicates this namespace is intended for the development environment
+    environment: development
