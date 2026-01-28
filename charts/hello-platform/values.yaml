@@ -1,5 +1,5 @@
 # Number of Pod replicas to run for the Deployment
-replicaCount: 2
+replicaCount: 3
 
 # Container image configuration
 image:
