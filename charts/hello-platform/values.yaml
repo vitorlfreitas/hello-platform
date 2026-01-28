@@ -8,7 +8,7 @@ image:
   # Always pull to ensure the latest tag from the registry is used
   pullPolicy: Always
   # Image tag identifying the version to use (CI updates this to the git commit SHA)
-  tag: latest
+  tag: ed1a5c8fd69770033cbcb88bb36d1af8ab71bb87
 
 # Kubernetes ServiceAccount settings
 serviceAccount:
